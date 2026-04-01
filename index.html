@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snow Leopard · Снежный Барс</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Raleway:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+
+:root{
+  --bg:#06101a;
+  --card:#0c1e2f;
+  --card2:#0f2336;
+  --cyan:#00d4ff;
+  --blue:#0077cc;
+  --gold:#e8b84b;
+  --snow:#eef5ff;
+  --muted:rgba(238,245,255,.5);
+  --dim:rgba(238,245,255,.28);
+  --p1:#ff7070;
+  --p2:#60c8ff;
+  --ok:#00e676;
+  --bad:#ff3d5a;
+  --border:rgba(255,255,255,.07);
+}
+
+/* scrollbar */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--blue);border-radius:10px}
+
+body{
+  background:var(--bg);
+  color:var(--snow);
+  font-family:'Raleway',sans-serif;
+  overflow-x:hidden;
+}
+
+/* ─── CANVAS SNOW ─── */
+/* keep pointer-events:none so UI remains interactive; place canvas above section backgrounds
+  but below navigation (nav has z-index:100) */
+#snow-canvas{position:fixed;inset:0;z-index:20;pointer-events:none;mix-blend-mode:screen}
+
+/* ─── NAV ─── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 48px;
+  background:rgba(6,16,26,.85);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+}
+.nav-logo{
+  font-family:'Playfair Display',serif;
+  font-size:20px;letter-spacing:.05em;
+  background:linear-gradient(90deg,var(--cyan),var(--snow));
+  background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.nav-links{display:flex;gap:32px}
+.nav-links a{
+  font-size:12px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--muted);text-decoration:none;
+  transition:color .25s;
+}
+.nav-links a:hover{color:var(--snow)}
+@media(max-width:600px){nav{padding:14px 20px}.nav-links{gap:16px}}
+
+/* ─── HERO ─── */
+#hero{
+  position:relative;z-index:1;
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;padding:0 24px;
+  overflow:hidden;
+}
+.hero-glow{
+  position:absolute;width:600px;height:600px;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,212,255,.1) 0%,transparent 65%);
+  pointer-events:none;
+  animation:breathe 4s ease-in-out infinite;
+}
+@keyframes breathe{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.15);opacity:1}}
+
+.hero-badge{
+  font-size:11px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--cyan);margin-bottom:28px;
+  opacity:0;animation:rise .8s .2s forwards;
+}
+.hero-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(52px,9vw,110px);
+  line-height:.92;font-weight:700;
+  opacity:0;animation:rise .9s .4s forwards;
+}
+.hero-title .en{
+  display:block;
+  background:linear-gradient(135deg,#fff 0%,var(--cyan) 60%);
+  background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero-title .ru{
+  display:block;font-style:italic;font-weight:400;
+  font-size:.58em;letter-spacing:.04em;margin-top:8px;
+  color:rgba(238,245,255,.65);-webkit-text-fill-color:rgba(238,245,255,.65);
+}
+.hero-divider{
+  width:1px;height:72px;
+  background:linear-gradient(to bottom,transparent,var(--cyan),transparent);
+  margin:40px auto;
+  opacity:0;animation:rise .8s .6s forwards;
+}
+.hero-desc{
+  max-width:520px;font-size:16px;font-weight:300;line-height:1.7;
+  color:var(--muted);
+  opacity:0;animation:rise .8s .75s forwards;
+}
+.hero-cta{
+  display:inline-flex;align-items:center;gap:10px;
+  margin-top:40px;padding:16px 40px;
+  background:linear-gradient(135deg,var(--cyan),var(--blue));
+  border-radius:50px;color:#000;font-weight:600;font-size:13px;
+  letter-spacing:.1em;text-transform:uppercase;text-decoration:none;
+  box-shadow:0 0 40px rgba(0,212,255,.3);
+  opacity:0;animation:rise .8s .9s forwards;
+  transition:transform .25s,box-shadow .25s;
+}
+.hero-cta:hover{transform:translateY(-3px);box-shadow:0 0 60px rgba(0,212,255,.5)}
+.hero-emoji{font-size:clamp(60px,10vw,120px);display:block;margin-bottom:24px;
+  opacity:0;animation:rise .8s .1s forwards,floatAnim 4s 1s ease-in-out infinite;}
+@keyframes floatAnim{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+
+/* ─── SECTION WRAPPER ─── */
+section{position:relative;z-index:1}
+.section-inner{max-width:1100px;margin:0 auto;padding:100px 40px}
+@media(max-width:700px){.section-inner{padding:70px 20px}}
+
+.section-eyebrow{
+  font-size:10px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--cyan);margin-bottom:16px;display:flex;align-items:center;gap:10px;
+}
+.section-eyebrow::before{content:'';width:28px;height:1.5px;background:var(--cyan);display:block}
+
+.section-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(32px,5vw,54px);font-weight:700;
+  line-height:1.1;margin-bottom:60px;
+}
+
+/* ─── FACTS SECTION ─── */
+#facts{background:linear-gradient(180deg,var(--bg) 0%,#081522 100%)}
+
+.fact-card{
+  display:grid;grid-template-columns:1fr 1px 1fr;
+  gap:0;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:20px;
+  overflow:hidden;
+  margin-bottom:24px;
+  opacity:0;transform:translateY(40px);
+  transition:opacity .6s,transform .6s,box-shadow .3s;
+}
+.fact-card.visible{opacity:1;transform:translateY(0)}
+.fact-card:hover{box-shadow:0 8px 40px rgba(0,212,255,.1)}
+
+.fact-sep{background:var(--border);align-self:stretch}
+
+.fact-side{padding:36px 36px}
+@media(max-width:640px){
+  .fact-card{grid-template-columns:1fr;grid-template-rows:auto auto}
+  .fact-sep{display:none}
+  .fact-side{padding:28px 24px}
+  .fact-side.ru{border-top:1px solid var(--border)}
+}
+
+.fact-side.en{text-align:left}
+.fact-side.ru{text-align:left}
+
+.fact-num{
+  font-family:'Playfair Display',serif;
+  font-size:60px;font-weight:700;line-height:1;
+  color:rgba(0,212,255,.12);
+  margin-bottom:16px;letter-spacing:-.02em;
+}
+.fact-lang{
+  font-size:9px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;
+  margin-bottom:12px;
+}
+.fact-lang.en{color:var(--cyan)}
+.fact-lang.ru{color:var(--gold)}
+
+.fact-headline{
+  font-family:'Playfair Display',serif;
+  font-size:19px;font-weight:700;line-height:1.3;
+  margin-bottom:12px;
+}
+.fact-body{
+  font-size:14px;font-weight:300;line-height:1.75;
+  color:var(--muted);
+}
+.fact-icon{font-size:32px;margin-bottom:16px;display:block}
+
+/* ─── QUIZ SETUP ─── */
+#quiz-section{background:#081522}
+
+.quiz-setup{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:24px;padding:48px;max-width:560px;margin:0 auto;
+  text-align:center;
+}
+.quiz-setup h3{
+  font-family:'Playfair Display',serif;font-size:28px;
+  margin-bottom:8px;
+}
+.quiz-setup p{color:var(--muted);font-size:14px;margin-bottom:36px}
+
+.player-row{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:32px}
+.pfield{display:flex;flex-direction:column;gap:8px}
+.plabel{font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase}
+.plabel.p1c{color:var(--p1)}.plabel.p2c{color:var(--p2)}
+.pinput{
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.12);border-radius:12px;
+  padding:12px 20px;color:#fff;
+  font-family:'Raleway',sans-serif;font-size:15px;
+  outline:none;width:180px;text-align:center;
+  transition:border-color .3s,box-shadow .3s;
+}
+.pinput:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,212,255,.15)}
+
+.btn-primary{
+  font-family:'Raleway',sans-serif;font-size:12px;font-weight:700;
+  letter-spacing:.15em;text-transform:uppercase;
+  background:linear-gradient(135deg,var(--cyan),var(--blue));
+  border:none;border-radius:50px;padding:18px 52px;
+  color:#000;cursor:pointer;
+  box-shadow:0 0 32px rgba(0,212,255,.3);
+  transition:transform .2s,box-shadow .2s;
+}
+.btn-primary:hover{transform:scale(1.04);box-shadow:0 0 50px rgba(0,212,255,.5)}
+.btn-primary:active{transform:scale(.97)}
+
+/* ─── QUIZ GAME ─── */
+#quiz-game{display:none;max-width:800px;margin:0 auto}
+
+.scoreboard{
+  display:grid;grid-template-columns:1fr auto 1fr;
+  align-items:center;gap:16px;margin-bottom:40px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:20px;padding:24px 32px;
+}
+.s-player{text-align:center}
+.s-name{font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;margin-bottom:6px}
+.s-pts{
+  font-family:'Playfair Display',serif;
+  font-size:48px;font-weight:700;
+  transition:transform .3s;
+}
+.s-pts.bump{animation:ptBump .35s ease}
+@keyframes ptBump{0%{transform:scale(1)}45%{transform:scale(1.3)}100%{transform:scale(1)}}
+.s-vs{font-size:13px;font-weight:600;color:var(--dim);letter-spacing:.1em}
+
+.turn-indicator{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  padding:12px 24px;border-radius:50px;
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--border);
+  margin-bottom:28px;font-size:13px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;
+  transition:border-color .4s;
+}
+.ti-dot{width:9px;height:9px;border-radius:50%;animation:tiPulse 1.2s ease-in-out infinite}
+@keyframes tiPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.6);opacity:.5}}
+
+.prog-wrap{margin-bottom:32px}
+.prog-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--dim);margin-bottom:8px}
+.prog-track{height:3px;background:rgba(255,255,255,.07);border-radius:10px;overflow:hidden}
+.prog-fill{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--cyan),var(--blue));transition:width .5s ease}
+
+.q-card{
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:24px;padding:40px;
+  position:relative;overflow:hidden;
+  margin-bottom:20px;
+}
+.q-card::after{
+  content:'';position:absolute;top:-80px;right:-80px;
+  width:220px;height:220px;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,212,255,.06) 0%,transparent 70%);
+  pointer-events:none;
+}
+.q-cat{
+  font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--cyan);margin-bottom:18px;
+  display:flex;align-items:center;gap:8px;
+}
+.q-cat::before{content:'';width:18px;height:1.5px;background:var(--cyan)}
+.q-text{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(18px,3vw,26px);font-weight:700;
+  line-height:1.35;
+}
+
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:32px}
+@media(max-width:500px){.answers{grid-template-columns:1fr}}
+
+.ans-btn{
+  background:rgba(255,255,255,.04);
+  border:1.5px solid rgba(255,255,255,.1);
+  border-radius:16px;padding:20px 18px;
+  color:#fff;font-family:'Raleway',sans-serif;
+  font-size:14px;font-weight:500;line-height:1.45;
+  cursor:pointer;text-align:left;
+  display:flex;align-items:flex-start;gap:12px;
+  transition:border-color .25s,background .25s,transform .15s;
+}
+.ans-btn:hover:not(:disabled){
+  border-color:rgba(0,212,255,.45);
+  background:rgba(0,212,255,.07);
+  transform:translateY(-2px);
+}
+.ans-btn:active:not(:disabled){transform:scale(.97)}
+.ans-letter{
+  flex-shrink:0;width:28px;height:28px;border-radius:8px;
+  background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;
+  font-family:'Playfair Display',serif;font-size:13px;font-weight:700;
+  transition:background .25s,color .25s;
+}
+.ans-btn.correct{border-color:var(--ok)!important;background:rgba(0,230,118,.1)!important;animation:pulse-ok .5s ease}
+.ans-btn.correct .ans-letter{background:var(--ok);color:#000}
+.ans-btn.wrong{border-color:var(--bad)!important;background:rgba(255,61,90,.1)!important;animation:shake .4s ease}
+.ans-btn.wrong .ans-letter{background:var(--bad);color:#fff}
+@keyframes pulse-ok{0%{transform:scale(1)}50%{transform:scale(1.03)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+
+.fact-reveal{
+  background:rgba(0,212,255,.05);
+  border:1px solid rgba(0,212,255,.15);
+  border-radius:14px;padding:18px 20px;
+  font-size:13.5px;font-weight:300;line-height:1.65;
+  color:var(--muted);margin-top:16px;
+  opacity:0;transform:translateY(8px);
+  transition:opacity .4s,transform .4s;
+}
+.fact-reveal.show{opacity:1;transform:none}
+
+.btn-next{
+  width:100%;font-family:'Raleway',sans-serif;
+  font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;
+  background:linear-gradient(135deg,var(--cyan),var(--blue));
+  border:none;border-radius:50px;padding:17px;
+  color:#000;cursor:pointer;margin-top:16px;
+  opacity:0;pointer-events:none;
+  transition:opacity .35s,transform .2s;
+}
+.btn-next.on{opacity:1;pointer-events:all}
+.btn-next:hover{transform:scale(1.02)}
+
+/* ─── QUIZ RESULT ─── */
+#quiz-result{
+  display:none;text-align:center;padding:60px 20px;
+  max-width:700px;margin:0 auto;
+}
+.result-trophy{font-size:90px;animation:floatAnim 3s ease-in-out infinite;display:block;margin-bottom:24px}
+.result-win-label{font-size:11px;font-weight:600;letter-spacing:.25em;text-transform:uppercase;color:var(--dim);margin-bottom:10px}
+.result-win-name{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(36px,7vw,70px);font-weight:700;
+  background:linear-gradient(135deg,var(--gold),#f07020);
+  background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-bottom:8px;
+}
+.result-win-sub{color:var(--muted);font-size:15px;margin-bottom:40px}
+.result-cards{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin-bottom:40px}
+.result-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:20px;padding:28px 36px;min-width:150px;text-align:center;
+}
+.rc-name{font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;margin-bottom:10px}
+.rc-pts{font-family:'Playfair Display',serif;font-size:42px;font-weight:700}
+.btn-restart{
+  font-family:'Raleway',sans-serif;font-size:12px;font-weight:600;
+  letter-spacing:.15em;text-transform:uppercase;
+  background:transparent;border:1.5px solid rgba(255,255,255,.2);
+  border-radius:50px;padding:16px 44px;
+  color:var(--snow);cursor:pointer;
+  transition:background .25s,transform .2s;
+}
+.btn-restart:hover{background:rgba(255,255,255,.08);transform:scale(1.03)}
+
+/* ─── FOOTER ─── */
+footer{
+  position:relative;z-index:1;
+  border-top:1px solid var(--border);
+  padding:40px;text-align:center;
+  font-size:12px;letter-spacing:.1em;color:var(--dim);
+}
+
+/* ─── ANIMATIONS ─── */
+@keyframes rise{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+/* Extra, site-wide small animations */
+.float-slow{animation:floatSlow 6s ease-in-out infinite}
+@keyframes floatSlow{0%{transform:translateY(0)}50%{transform:translateY(-8px)}100%{transform:translateY(0)}}
+
+.fact-icon{animation:iconPulse 5s ease-in-out infinite}
+@keyframes iconPulse{0%{transform:translateY(0) scale(1)}50%{transform:translateY(-6px) scale(1.02)}100%{transform:translateY(0) scale(1)}}
+
+.fact-card.visible{transform:translateY(0) scale(1);box-shadow:0 12px 60px rgba(0,0,0,.25)}
+.fact-card .fact-headline{transition:transform .45s ease,color .35s}
+.fact-card.visible .fact-headline{transform:translateY(-6px)}
+
+.nav-links a{transition:transform .22s,color .22s}
+.nav-links a:hover{transform:translateY(-3px) scale(1.02)}
+
+.q-card{transition:transform .45s cubic-bezier(.16,1,.3,1),box-shadow .35s}
+.q-card:hover{transform:translateY(-6px);box-shadow:0 18px 60px rgba(0,0,0,.35)}
+
+.ans-btn{transition:transform .18s,box-shadow .18s}
+.ans-btn:active{transform:scale(.985)}
+
+#lang-toggle{transition:transform .18s,box-shadow .18s}
+#lang-toggle:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,212,255,.12)}
+
+/* subtle twinkle effect for snow canvas by overlaying small gradients */
+.snow-overlay{position:fixed;inset:0;pointer-events:none;z-index:21;mix-blend-mode:screen;opacity:0.9}
+.snow-overlay::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 20% 10%, rgba(255,255,255,.03), transparent 10%), radial-gradient(circle at 80% 90%, rgba(200,240,255,.02), transparent 12%);animation:overlayShift 12s linear infinite}
+@keyframes overlayShift{0%{transform:translateY(0)}50%{transform:translateY(6px)}100%{transform:translateY(0)}}
+
+/* ─── HERO STICKER ─── */
+.hero-sticker{
+  position:absolute;right:8%;top:14%;z-index:60;
+  background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(230,248,255,.9));
+  color:#021018;padding:10px 14px;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.35);
+  font-weight:700;font-size:13px;letter-spacing:.04em;cursor:pointer;
+  transform:translateY(0) rotate(-3deg);display:inline-flex;align-items:center;gap:8px;
+  animation:stickerFloat 4.6s ease-in-out infinite;user-select:none;
+}
+.hero-sticker:active{transform:scale(.98) rotate(-2deg)}
+.st-text{display:inline-block}
+.st-spark{width:8px;height:8px;border-radius:50%;background:radial-gradient(circle,#fff,#aeefff);box-shadow:0 0 12px rgba(160,240,255,.9);display:inline-block;transform:translateY(-1px)}
+
+@keyframes stickerFloat{0%{transform:translateY(0) rotate(-3deg)}25%{transform:translateY(-6px) rotate(-1deg)}50%{transform:translateY(0) rotate(2deg)}75%{transform:translateY(-4px) rotate(-1deg)}100%{transform:translateY(0) rotate(-3deg)}}
+
+/* quick pop used when triggered */
+.hero-sticker.pop{animation:stickerPop .5s ease both}
+@keyframes stickerPop{0%{transform:scale(1) translateY(0)}40%{transform:scale(1.12) translateY(-8px)}100%{transform:scale(1) translateY(0)}}
+
+/* small decorative sparkles near hero (absolute inside hero element) */
+.hero .hero-sparkle{position:absolute;left:10%;top:8%;width:8px;height:8px;border-radius:50%;background:radial-gradient(circle,#bff7ff,#64d8ff);box-shadow:0 0 14px rgba(100,216,255,.9);animation:heroSpark 3.2s ease-in-out infinite}
+@keyframes heroSpark{0%{opacity:.2;transform:translateY(0) scale(.9)}50%{opacity:1;transform:translateY(-10px) scale(1.1)}100%{opacity:.2;transform:translateY(0) scale(.9)}}
+</style>
+</head>
+<body>
+
+<canvas id="snow-canvas"></canvas>
+<div class="snow-overlay" aria-hidden="true"></div>
+
+<!-- NAV -->
+<nav>
+  <span class="nav-logo">Panthera uncia</span>
+  <div class="nav-links">
+    <a href="#facts">Facts</a>
+    <a href="#quiz-section">Quiz</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-glow"></div>
+  <span class="hero-emoji">🐆</span>
+  <p class="hero-badge">Panthera uncia · The Ghost of the Mountains</p>
+  <h1 class="hero-title">
+    <span class="en">Snow Leopard</span>
+    <span class="ru">Снежный Барс</span>
+  </h1>
+  <!-- floating sticker in hero -->
+  <div class="hero-sticker" id="hero-sticker" role="img" aria-label="Sticker: Explore">
+    <span class="st-text">Explore</span>
+    <span class="st-spark"></span>
+  </div>
+  <div class="hero-divider"></div>
+  <p class="hero-desc">Discover the secrets of the world's most elusive big cat — the ghost that rules the high peaks of Central Asia.</p>
+  <a href="#facts" class="hero-cta">Explore Facts →</a>
+</section>
+
+<!-- FACTS -->
+<section id="facts">
+  <div class="section-inner">
+    <p class="section-eyebrow">Natural History</p>
+    <h2 class="section-title">Fascinating Facts</h2>
+
+    <div id="facts-container"></div>
+  </div>
+</section>
+
+<!-- QUIZ SETUP -->
+<section id="quiz-section">
+  <div class="section-inner">
+    <p class="section-eyebrow">Test Your Knowledge</p>
+    <h2 class="section-title">Quiz Time</h2>
+
+    <div class="quiz-setup" id="quiz-setup">
+      <h3>Ready to play? 🎯</h3>
+      <p>8 questions · 2 answer choices · 2 players alternate turns</p>
+      <div class="player-row">
+        <div class="pfield">
+          <span class="plabel p1c">Player 1</span>
+          <input class="pinput" id="p1n" type="text" placeholder="Name" maxlength="14" value="Player 1">
+        </div>
+        <div class="pfield">
+          <span class="plabel p2c">Player 2</span>
+          <input class="pinput" id="p2n" type="text" placeholder="Name" maxlength="14" value="Player 2">
+        </div>
+      </div>
+      <button class="btn-primary" onclick="startQuiz()">Start Quiz →</button>
+    </div>
+
+    <div id="quiz-game">
+      <div class="scoreboard">
+        <div class="s-player">
+          <div class="s-name p1c" id="sb-n1">P1</div>
+          <div class="s-pts" id="sb-s1" style="color:var(--p1)">0</div>
+        </div>
+        <div class="s-vs">VS</div>
+        <div class="s-player">
+          <div class="s-name p2c" id="sb-n2">P2</div>
+          <div class="s-pts" id="sb-s2" style="color:var(--p2)">0</div>
+        </div>
+      </div>
+
+      <div class="turn-indicator" id="turn-ind">
+        <div class="ti-dot" id="ti-dot"></div>
+        <span id="ti-label">Turn</span>
+      </div>
+
+      <div style="text-align:center;margin:12px 0">
+        <button id="lang-toggle" onclick="toggleLang()" style="padding:8px 14px;font-size:13px;border-radius:20px;border:none;cursor:pointer;background:linear-gradient(90deg,var(--cyan),var(--blue));color:#000">EN</button>
+      </div>
+
+      <div class="prog-wrap">
+        <div class="prog-meta">
+          <span id="q-num">Question 1 of 8</span>
+          <span id="q-cat-label"></span>
+        </div>
+        <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+      </div>
+
+      <div class="q-card">
+        <div class="q-cat" id="qcat"></div>
+        <div class="q-text" id="qtext"></div>
+        <div class="answers" id="answers-wrap"></div>
+      </div>
+
+      <div class="fact-reveal" id="fact-reveal"></div>
+      <button class="btn-next" id="btn-next" onclick="nextQ()">Next Question →</button>
+    </div>
+
+    <div id="quiz-result">
+      <span class="result-trophy" id="r-trophy">🏆</span>
+      <p class="result-win-label">Winner</p>
+      <p class="result-win-name" id="r-name"></p>
+      <p class="result-win-sub" id="r-sub"></p>
+      <div class="result-cards" id="r-cards"></div>
+      <button class="btn-restart" onclick="restartQuiz()">Play Again</button>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Snow Leopard · Снежный Барс · Panthera uncia &nbsp;·&nbsp; Interactive Educational Site
+</footer>
+
+<script>
+/* ═══════════ SNOW CANVAS (enhanced) ═══════════ */
+const cv=document.getElementById('snow-canvas');
+const cx=cv.getContext('2d');
+let W,H,flakes=[];
+let wind=0;
+let lastScroll=0;
+
+function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight}
+
+function mkF(){
+  const r = Math.random()*3.2 + 0.6;
+  return {
+    x: Math.random()*W,
+    y: Math.random()*H - Math.random()*H,
+    r: r,
+    vy: Math.random()*1.2 + 0.2*(r/3),
+    vx: (Math.random()-0.5)*0.6,
+    o: Math.random()*0.7 + 0.05,
+    sway: Math.random()*0.6 - 0.3,
+    tw: Math.random()*Math.PI*2,
+    twamp: Math.random()*0.8
+  };
+}
+
+function initF(){
+  const area = Math.max(1000, W*H);
+  const count = Math.max(140, Math.min(300, Math.floor(area/6000)));
+  flakes = Array.from({length:count}, mkF);
+}
+
+function drawSnow(){
+  cx.clearRect(0,0,W,H);
+  const time = performance.now();
+  flakes.forEach(f=>{
+    // twinkle
+    const twinkle = (Math.sin(f.tw + time/800) * 0.5 + 0.5) * f.twamp + 0.3;
+    const alpha = Math.max(0.05, Math.min(1, f.o * twinkle));
+    cx.beginPath();
+    cx.arc(f.x, f.y, f.r, 0, Math.PI*2);
+    cx.fillStyle = `rgba(235,245,255,${alpha})`;
+    cx.fill();
+
+    // movement with wind and slight sway
+    f.x += f.vx + wind * 0.35 + Math.sin(f.tw + time/600) * f.sway;
+    f.y += f.vy;
+    f.tw += 0.01 + (f.r/40);
+
+    // wrap edges
+    if(f.y > H + 12) Object.assign(f, mkF(), {y:-12, x: Math.random()*W});
+    if(f.x < -30) f.x = W + 30;
+    if(f.x > W + 30) f.x = -30;
+  });
+
+  requestAnimationFrame(drawSnow);
+}
+
+resize();initF();drawSnow();
+window.addEventListener('resize',()=>{resize();initF()});
+window.addEventListener('scroll',()=>{
+  const s = window.scrollY || window.pageYOffset || 0;
+  wind = (s - lastScroll) / Math.max(1, H) * 120; // amplify subtle scroll into wind
+  lastScroll = s;
+  // clamp wind to avoid extreme values
+  wind = Math.max(-1.4, Math.min(1.4, wind));
+});
+
+/* ═══════════ FACTS DATA ═══════════ */
+const FACTS=[
+  {
+    icon:'🏔️',
+    enTitle:'High Altitude Specialist',
+    enBody:'Lives at 3,000–5,500 m in alpine zones across Central Asia.',
+    ruTitle:'Высокогорный специалист',
+    ruBody:'Обитает на 3 000–5 500 м в альпийской зоне Центральной Азии.'
+  },
+  {
+    icon:'🔵',
+    enTitle:'The Scarf Tail',
+    enBody:'Its long, thick tail (up to ~90 cm) is used like a scarf in cold weather.',
+    ruTitle:'Хвост-шарф',
+    ruBody:'Длинный пушистый хвост (до ~90 см) барс использует как шарф в холоде.'
+  },
+  {
+    icon:'⚡',
+    enTitle:'Super Jumper',
+    enBody:'Powerful hind legs let it leap up to ~15 m horizontally.',
+    ruTitle:'Суперпрыгун',
+    ruBody:'Мощные задние лапы позволяют прыгать до ~15 м в длину.'
+  },
+  {
+    icon:'🔇',
+    enTitle:'The Silent Cat',
+    enBody:'Cannot roar; communicates with chuffs, hisses and a soft "prusten".',
+    ruTitle:'Молчаливая кошка',
+    ruBody:'Не рычит; общается фырканьем, шипением и мягким «прустеном».'
+  },
+  {
+    icon:'🎯',
+    enTitle:'Powerful Hunter',
+    enBody:'Can take prey 2–4× its body weight; eats bharal, ibex and wild sheep.',
+    ruTitle:'Мощный охотник',
+    ruBody:'Охотится на добычу в 2–4 раза тяжелее себя: бараны, козлы, архары.'
+  },
+  {
+    icon:'🌍',
+    enTitle:'Endangered Ghost',
+    enBody:'Only ~4,000–6,500 remain in the wild; threats include poaching and habitat loss.',
+    ruTitle:'Призрак под угрозой',
+    ruBody:'Осталось ~4 000–6 500 особей; угрозы — браконьерство и потеря среды.'
+  },
+  {
+    icon:'🇰🇬',
+    enTitle:'Symbol of Bishkek',
+    enBody:'A national symbol of Kyrgyzstan (called "irbis") and featured in Bishkek’s heraldry.',
+    ruTitle:'Символ Бишкека',
+    ruBody:'Национальный символ Кыргызстана («ирбис»), изображён на гербе Бишкека.'
+  }
+];
+
+/* ═══════════ RENDER FACTS ═══════════ */
+const fc=document.getElementById('facts-container');
+FACTS.forEach((f,i)=>{
+  fc.innerHTML+=`
+  <div class="fact-card" id="fc${i}">
+    <div class="fact-side en">
+      <span class="fact-icon">${f.icon}</span>
+      <div class="fact-num">0${i+1}</div>
+      <div class="fact-lang en">English</div>
+      <div class="fact-headline">${f.enTitle}</div>
+      <div class="fact-body">${f.enBody}</div>
+    </div>
+    <div class="fact-sep"></div>
+    <div class="fact-side ru">
+      <span class="fact-icon">${f.icon}</span>
+      <div class="fact-num">0${i+1}</div>
+      <div class="fact-lang ru">Русский</div>
+      <div class="fact-headline">${f.ruTitle}</div>
+      <div class="fact-body">${f.ruBody}</div>
+    </div>
+  </div>`;
+});
+
+/* scroll reveal */
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.classList.add('visible');
+      obs.unobserve(e.target);
+    }
+  });
+},{threshold:.12});
+document.querySelectorAll('.fact-card').forEach((c,i)=>{
+  c.style.transitionDelay=(i*.07)+'s';
+  obs.observe(c);
+});
+
+/* ═══════════ QUIZ DATA ═══════════ */
+const QUIZ=[
+  {cat:'🏔️ Habitat',cat_ru:'🏔️ Среда',q:'At what altitude does the snow leopard typically live?',q_ru:'На какой высоте обычно живёт снежный барс?',opts:['3,000–5,500 meters','200–800 meters'],opts_ru:['3 000–5 500 м','200–800 м'],ans:0,fact:'Snow leopards are the highest-dwelling big cats, thriving in alpine and subalpine zones.',fact_ru:'Снежные барсы обитают в высокогорьях в альпийских и субальпийских зонах.'},
+  {cat:'🔵 Anatomy',cat_ru:'🔵 Анатомия',q:'Why does the snow leopard wrap its tail around its face?',q_ru:'Зачем снежный барс обворачивает хвост вокруг лица?',opts:['To warm the air it breathes','To signal territory to rivals'],opts_ru:['Чтобы согревать вдыхаемый воздух','Чтобы пометить территорию'],ans:0,fact:'The thick tail acts like a built-in scarf, heating cold mountain air before it enters the lungs.',fact_ru:'Пушистый хвост служит как шарф, согревая холодный воздух.'},
+  {cat:'⚡ Ability',cat_ru:'⚡ Способности',q:'How far can a snow leopard jump horizontally?',q_ru:'На какое расстояние может прыгнуть снежный барс?',opts:['Up to 15 meters','Up to 4 meters'],opts_ru:['До 15 метров','До 4 метров'],ans:0,fact:'Its huge hind legs generate explosive power, making it one of the best jumpers among all cats.',fact_ru:'Мощные задние лапы обеспечивают прыжки до ~15 м.'},
+  {cat:'🔇 Voice',cat_ru:'🔇 Голос',q:'What sound can a snow leopard NOT make?',q_ru:'Какого звука снежный барс НЕ может издавать?',opts:['Roar','Hiss and chuff'],opts_ru:['Рычать','Фыркать и шипеть'],ans:0,fact:'Unlike lions and tigers, snow leopards lack the anatomy for roaring — they chuff, hiss, and prusten.',fact_ru:'В отличие от львов и тигров, барс не может рычать; он фыркает и шипит.'},
+  {cat:'🎯 Hunting',cat_ru:'🎯 Охота',q:'How much heavier than itself can a snow leopard\'s prey be?',q_ru:'Насколько тяжелее может быть добыча по сравнению с барсом?',opts:['2–4 times its body weight','Same body weight only'],opts_ru:['В 2–4 раза тяжелее','Только равного веса'],ans:0,fact:'This extraordinary predatory ratio lets the snow leopard tackle large mountain ungulates.',fact_ru:'Барс способен охотиться на добычу в 2–4 раза тяжелее себя.'},
+  {cat:'🌍 Status',cat_ru:'🌍 Статус',q:'How many snow leopards are estimated to remain in the wild?',q_ru:'Сколько, по оценкам, осталось снежных барсов в дикой природе?',opts:['4,000–6,500','Over 50,000'],opts_ru:['4 000–6 500','Более 50 000'],ans:0,fact:'Classified as Vulnerable by the IUCN, their numbers are declining due to poaching and habitat loss.',fact_ru:'Оценочно 4 000–6 500 особей; вид уязвим из‑за браконьерства и утраты среды.'},
+  {cat:'🇰🇬 Culture',cat_ru:'🇰🇬 Культура',q:'Where does the snow leopard appear as an official symbol?',q_ru:'Где снежный барс присутствует как официальный символ?',opts:['Coat of arms of Bishkek','Flag of Kazakhstan'],opts_ru:['На гербе Бишкека','На флаге Казахстана'],ans:0,fact:'Known as "irbis" in Kyrgyz, the snow leopard is the proud emblem of the capital city Bishkek.',fact_ru:'В Кыргызстане («ирбис») изображён на гербе Бишкека.'},
+  {cat:'❄️ Adaptation',cat_ru:'❄️ Адаптация',q:'What do snow leopard paws act like in deep snow?',q_ru:'На что похожи лапы барса в глубоком снегу?',opts:['Natural snowshoes','Claws that grip ice'],opts_ru:['Естественные снегоступы','Когти, цепляющие лёд'],ans:0,fact:'Wide, fur-padded paws distribute body weight evenly across soft snow, preventing the cat from sinking.',fact_ru:'Широкие, опушённые лапы служат как снегоступы и не дают проваливаться.'}
+];
+
+/* ═══════════ QUIZ STATE ═══════════ */
+let p1='',p2='',pts=[0,0],turn=0,qIdx=0,done=false,qs=[];
+let lang='en'; // 'en' or 'ru'
+let currentOrder=[0,1];
+let currentCorrect=null; // index (0 or 1) in the displayed order
+
+function startQuiz(){
+  p1=document.getElementById('p1n').value.trim()||'Player 1';
+  p2=document.getElementById('p2n').value.trim()||'Player 2';
+  pts=[0,0];turn=0;qIdx=0;
+  qs=[...QUIZ].sort(()=>Math.random()-.5);
+
+  document.getElementById('sb-n1').textContent=p1;
+  document.getElementById('sb-n2').textContent=p2;
+  document.getElementById('quiz-setup').style.display='none';
+  document.getElementById('quiz-game').style.display='block';
+  document.getElementById('quiz-result').style.display='none';
+  renderQ();
+}
+
+function renderQ(){
+  done=false;
+  const q=qs[qIdx],total=qs.length;
+  const col=turn===0?'var(--p1)':'var(--p2)';
+  const pName=turn===0?p1:p2;
+
+  document.getElementById('ti-dot').style.background=col;
+  document.getElementById('ti-label').textContent=`Turn: ${pName}`;
+  document.getElementById('ti-label').style.color=col;
+  document.getElementById('turn-ind').style.borderColor=col.replace('var(','').replace(')','')+'40'||'rgba(255,255,255,.1)';
+  document.getElementById('q-num').textContent=`Question ${qIdx+1} of ${total}`;
+  document.getElementById('prog-fill').style.width=`${(qIdx/total)*100}%`;
+  document.getElementById('qcat').textContent = (lang==='en'? q.cat : (q.cat_ru||q.cat));
+  document.getElementById('qtext').textContent=q.q;
+  // decide display order randomly so correct answer can be left or right
+  currentOrder=[0,1];
+  if(Math.random() < 0.5) currentOrder.reverse();
+  currentCorrect = currentOrder.indexOf(q.ans);
+
+  document.getElementById('qtext').textContent=(lang==='en'?q.q:q.q_ru||q.q);
+  const qcard=document.querySelector('.q-card');
+  qcard.style.animation='none';void qcard.offsetWidth;
+  qcard.style.animation='fadeIn .45s cubic-bezier(.16,1,.3,1) both';
+
+  const wrap=document.getElementById('answers-wrap');
+  wrap.innerHTML='';
+  ['A','B'].forEach((l,i)=>{
+    const btn=document.createElement('button');
+    btn.className='ans-btn';
+    btn.style.animation=`fadeIn .4s ${i*.1}s cubic-bezier(.16,1,.3,1) both`;
+    const optIndex = currentOrder[i];
+    const optText = lang==='en'? q.opts[optIndex] : (q.opts_ru ? q.opts_ru[optIndex] : q.opts[optIndex]);
+    btn.innerHTML=`<span class="ans-letter">${l}</span><span>${optText}</span>`;
+    btn.onclick=()=>pick(i,btn,q);
+    wrap.appendChild(btn);
+  });
+
+  const fr=document.getElementById('fact-reveal');
+  fr.className='fact-reveal';fr.textContent='';
+  document.getElementById('btn-next').className='btn-next';
+}
+
+function pick(idx,btn,q){
+  if(done)return;done=true;
+  const correct = idx === currentCorrect;
+  document.querySelectorAll('.ans-btn').forEach((b,i)=>{
+    b.disabled=true;
+    if(i===currentCorrect) b.classList.add('correct');
+    else if(i===idx && !correct) b.classList.add('wrong');
+  });
+
+  if(correct){
+    pts[turn]++;
+    const el=document.getElementById(turn===0?'sb-s1':'sb-s2');
+    el.textContent=pts[turn];
+    el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump');
+  }
+
+  const fr=document.getElementById('fact-reveal');
+  const prefix = lang==='en' ? (correct ? '✓ Correct! ' : '✗ Wrong! ') : (correct ? '✓ Верно! ' : '✗ Неверно! ');
+  const factText = lang==='en' ? (q.fact||'') : (q.fact_ru||q.fact||'');
+  fr.textContent = prefix + factText;
+  fr.className='fact-reveal '+(correct?'':'wrong-reveal');
+  fr.style.borderColor=correct?'rgba(0,230,118,.25)':'rgba(255,61,90,.2)';
+  fr.style.background=correct?'rgba(0,230,118,.05)':'rgba(255,61,90,.06)';
+  setTimeout(()=>fr.classList.add('show'),10);
+
+  document.getElementById('btn-next').className='btn-next on';
+}
+
+// Language toggle for quiz (EN <-> RU) without resetting state
+function toggleLang(){
+  lang = (lang==='en') ? 'ru' : 'en';
+  const btn = document.getElementById('lang-toggle');
+  btn.textContent = (lang==='en') ? 'EN' : 'RU';
+  // update visible texts without resetting the question state
+  const q = qs[qIdx];
+  if(!q) return;
+  document.getElementById('qcat').textContent = (lang==='en'? q.cat : (q.cat_ru||q.cat));
+  document.getElementById('qtext').textContent = (lang==='en'? q.q : (q.q_ru||q.q));
+  // update answers
+  const buttons = Array.from(document.querySelectorAll('.ans-btn'));
+  buttons.forEach((btnEl,i)=>{
+    const optIndex = currentOrder[i];
+    const optText = lang==='en' ? q.opts[optIndex] : (q.opts_ru ? q.opts_ru[optIndex] : q.opts[optIndex]);
+    const span = btnEl.querySelector('span:nth-child(2)');
+    if(span) span.textContent = optText;
+  });
+  // update fact reveal if shown
+  const fr=document.getElementById('fact-reveal');
+  if(fr.classList.contains('show')){
+    // determine if last answer was correct by checking classes
+    const wasCorrect = !!document.querySelector('.ans-btn.correct');
+    const prefix = lang==='en' ? (wasCorrect ? '✓ Correct! ' : '✗ Wrong! ') : (wasCorrect ? '✓ Верно! ' : '✗ Неверно! ');
+    const factText = lang==='en' ? (q.fact||'') : (q.fact_ru||q.fact||'');
+    fr.textContent = prefix + factText;
+  }
+}
+
+function nextQ(){
+  qIdx++;turn=1-turn;
+  if(qIdx>=qs.length){showResult();return;}
+  renderQ();
+}
+
+function showResult(){
+  document.getElementById('quiz-game').style.display='none';
+  document.getElementById('quiz-result').style.display='block';
+
+  let wName,wSub,col;
+  if(pts[0]>pts[1]){wName=p1;wSub=`${pts[0]} of ${qs.length} points`;col='var(--p1)'}
+  else if(pts[1]>pts[0]){wName=p2;wSub=`${pts[1]} of ${qs.length} points`;col='var(--p2)'}
+  else{wName='Tie! 🤝';wSub='Both players scored equally';col='var(--gold)';document.getElementById('r-trophy').textContent='🤝'}
+
+  const rn=document.getElementById('r-name');
+  rn.textContent=wName;
+  rn.style.background=`linear-gradient(135deg,${col},#f08020)`;
+  rn.style['-webkit-background-clip']='text';
+  rn.style['-webkit-text-fill-color']='transparent';
+  document.getElementById('r-sub').textContent=wSub;
+  document.getElementById('r-cards').innerHTML=`
+    <div class="result-card"><div class="rc-name p1c">${p1}</div><div class="rc-pts" style="color:var(--p1)">${pts[0]}</div></div>
+    <div class="result-card"><div class="rc-name p2c">${p2}</div><div class="rc-pts" style="color:var(--p2)">${pts[1]}</div></div>`;
+}
+
+function restartQuiz(){
+  document.getElementById('quiz-result').style.display='none';
+  document.getElementById('quiz-setup').style.display='block';
+}
+</script>
+<script>
+// Hero sticker interaction: periodic pop and click pulse
+;(function(){
+  const st = document.getElementById('hero-sticker');
+  if(!st) return;
+  // periodic gentle pop every 6-9s
+  setInterval(()=>{
+    st.classList.add('pop');
+    setTimeout(()=>st.classList.remove('pop'),520);
+  }, 7000 + Math.floor(Math.random()*3000));
+
+  st.addEventListener('click', ()=>{
+    st.classList.add('pop');
+    setTimeout(()=>st.classList.remove('pop'),520);
+    // optional: briefly scroll to facts section to encourage exploration
+    const el = document.getElementById('facts');
+    if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+  });
+})();
+</script>
+</body>
+</html>
